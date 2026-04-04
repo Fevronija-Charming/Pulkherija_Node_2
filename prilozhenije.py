@@ -593,6 +593,166 @@ async def insert_persona(platoch_persona: Annotated[Banda_Schema,Depends()]):
             raise HTTPException(status_code=500, detail="Проблема с брокером")
     except:
         raise HTTPException(status_code=500, detail="Проблема с базой данных")
+#frontend часть
+from fastui.forms import fastui_form
+from fastapi.responses import HTMLResponse
+from fastui import FastUI, AnyComponent, prebuilt_html, components as components
+from fastui.components.display import DisplayMode,DisplayLookup
+from fastui.events import GoToEvent, BackEvent
+import fastui.forms as forms
+import python_multipart
+#пристройка для отрисовки фронта
+app = FastAPI()
+gamajun=FastAPI()
+app.mount("/gamajun",gamajun)
+#фронт на fastUI ВИДЖЕТЫ СТРАНИЦЫ ФРОНТА
+#from templates import field_labels_project
+#@app.post("/add/project")
+#async def insert_DB_project_s_GrIntr(background_task: BackgroundTasks, id: int= Form(), Название_проекта: str = Form(),
+    #Критерий_завершенности: str =  Form(), Этап_1: str = Form(), Этап_2: str = Form(), Этап_3: str = Form(),
+    #Этап_4: str = Form(), Этап_5: str = Form(), Этап_6: str = Form(), Этап_7: str = Form(), Этап_8: str = Form(),
+    #Этап_9: str = Form(), Этап_10: str = Form()):
+    #svedenija_project = [Название_проекта,Критерий_завершенности,Этап_1,Этап_2,Этап_3,Этап_4,Этап_5,Этап_6,Этап_7,
+    #Этап_8,Этап_9,Этап_10]
+    #peremycka1 = " -> "
+    #peremycka2 = "; "
+    #soobshenije=""
+    #for i in range(len(svedenija_project)):
+        #soobshenije=soobshenije + field_labels_project[i] + peremycka1 + svedenija_project[i] + peremycka2
+    #print(soobshenije)
+    #try:
+        #tochnoje_vremja = str(datetime.datetime.now())
+        #vremja_format = tochnoje_vremja[:-10]
+        #sekundi = int(time.time())
+        #Project_s_GrIntr = Проект(#id=id,
+        #Название_проекта=Название_проекта,Критерий_завершенности=Критерий_завершенности,
+        #Завершённость_проекта=0, Этап_1 = Этап_1, Завершенность_Этап_1=0, Этап_2 = Этап_2, Завершенность_Этап_2=0,
+        #Этап_3 = Этап_3, Завершенность_Этап_3=0, Этап_4 = Этап_4, Завершенность_Этап_4=0, Этап_5 = Этап_5,
+        #Завершенность_Этап_5=0, Этап_6 = Этап_6, Завершенность_Этап_6=0, Этап_7 = Этап_7, Завершенность_Этап_7=0,
+        #Этап_8 = Этап_8, Завершенность_Этап_8=0, Этап_9 = Этап_9, Завершенность_Этап_9=0, Этап_10 = Этап_10,
+        #Завершенность_Этап_10=0, Дата_регистрации=vremja_format, Дата_изменения=vremja_format,Синхронизация=sekundi)
+        #session = session_factory()
+        #session.add(Project_s_GrIntr)
+        #await session.commit()
+        #await session.close()
+        #try:
+            # заяц включен
+            #await router.broker.publish(message="Добавлен новый проект", queue="UROKI")
+            #await router.broker.publish(message=f"{soobshenije}", queue="UROKI")
+            #try:
+                #recipient = os.getenv("RECIPIENT1")
+                #background_task.add_task(send_email_async, "Добавлен новый проект", recipient, soobshenije)
+                #return soobshenije
+#except:
+                #raise HTTPException(status_code=500, detail="Проблема с почтой")
+#except:
+            #raise HTTPException(status_code=500, detail="Проблема с брокером")
+#except:
+        #raise HTTPException(status_code=500, detail="Проблема с базой данных")
+#@app.post("/add/")
+#async def insert_DB_urok_s_GrIntr(background_task: BackgroundTasks,Имя_Преподавателя: str = Form(),Фамилия_Преподавателя: str = Form(),
+    #Предмет_Обучения: str = Form(),Имя_Ученика: str= Form(),Фамилия_Ученика: str= Form(),Ступень_Обучения: str= Form(),
+    #Дата_Проведения: str= Form(),Время_Начала: str= Form(),Длительность_Занятия_Мин: int= Form(),
+    #Стоимость_Занятия_Центов: int= Form(), Что_Делали_На_Уроке: str= Form(),
+    #Задание_На_Дом: str= Form(), Примечание: str= Form()):
+    #peremycka1 = " -> "
+    #peremycka2 = "; "
+    #soobshenije1 = "Имя_Преподавателя"
+    #soobshenije2 = soobshenije1 + peremycka1 + Имя_Преподавателя + peremycka2
+    #soobshenije3 = "Фамилия_Преподавателя"
+    #soobshenije4 = soobshenije2 + soobshenije3 +  peremycka1 + Фамилия_Преподавателя + peremycka2
+    #soobshenije5="Предмет_Обучения"
+    #soobshenije6 = soobshenije4 + soobshenije5 + peremycka1 + Предмет_Обучения + peremycka2
+    #soobshenije7 = "Имя_Ученика"
+    #soobshenije8=soobshenije6 + soobshenije7 + peremycka1 + Имя_Ученика + peremycka2
+    #soobshenije9="Фамилия_Ученика"
+    #soobshenije10 = soobshenije8 + soobshenije9 + peremycka1 + Фамилия_Ученика + peremycka2
+    #soobshenije11= "Ступень_Обучения"
+    #soobshenije12 = soobshenije10 + soobshenije11 + peremycka1 + Ступень_Обучения + peremycka2
+    #soobshenije13 = "Дата_Проведения"
+    #soobshenije14 = soobshenije12 + soobshenije13 + peremycka1 + Дата_Проведения + peremycka2
+    #soobshenije15= "Время_Начала"
+    #soobshenije16= soobshenije14 + soobshenije15 + peremycka1 + Время_Начала + peremycka2
+    #soobshenije17 = "Длительность_Занятия_Мин"
+    #soobshenije18 = soobshenije16 + soobshenije17 + peremycka1 + str(Длительность_Занятия_Мин) + peremycka2
+    #soobshenije19 = "Стоимость_Занятия_Центов"
+    #soobshenije20 = soobshenije18 + soobshenije19 + peremycka1 + str(Стоимость_Занятия_Центов) + peremycka2
+    #soobshenije21="Что_Делали_На_Уроке"
+    #soobshenije22 = soobshenije20 + soobshenije21 + peremycka1 + Что_Делали_На_Уроке + peremycka2
+    #soobshenije23="Задание_На_Дом"
+    #soobshenije24= soobshenije22 + soobshenije23 + peremycka1 + Задание_На_Дом + peremycka2
+    #soobshenije25="Примечание"
+    #soobshenije26 = soobshenije24 + soobshenije25 + peremycka1 + Примечание
+    #try:
+        #Urok_s_GrIntr = Уроки(Имя_Преподавателя=Имя_Преподавателя,Фамилия_Преподавателя=Фамилия_Преподавателя,
+        #Предмет_Обучения = Предмет_Обучения, Имя_Ученика = Имя_Ученика,Фамилия_Ученика = Фамилия_Ученика,
+        #Ступень_Обучения = Ступень_Обучения,Дата_Проведения = Дата_Проведения, Время_Начала = Время_Начала,
+        #Длительность_Занятия_Мин = Длительность_Занятия_Мин, Стоимость_Занятия_Центов = Стоимость_Занятия_Центов,
+        #Что_Делали_На_Уроке = Что_Делали_На_Уроке, Задание_На_Дом = Задание_На_Дом, Примечание = Примечание)
+        #session = session_factory()
+        #session.add(Urok_s_GrIntr)
+        #await session.commit()
+        #await session.close()
+        #try:
+            # заяц включен
+            #await router.broker.publish(message="Добавлен новый урок", queue="UROKI")
+            #await router.broker.publish(message=f"{soobshenije26}", queue="UROKI")
+            #try:
+                #recipient = os.getenv("RECIPIENT1")
+                #background_task.add_task(send_email_async, "Добавлен новый урок", recipient,soobshenije26)
+                #return soobshenije26
+                #except:
+                #raise HTTPException(status_code=500, detail="Проблема с почтой")
+                #except:
+            #raise HTTPException(status_code=500, detail="Проблема с брокером")
+            #except:
+        #raise HTTPException(status_code=500, detail="Проблема с базой данных")
+@gamajun.get("/api/results", response_model=FastUI,response_model_exclude_none=True)
+async def show_platoky():
+    import psycopg2 as ps
+    connection = ps.connect(host=os.getenv("DBHOST"), database=os.getenv("DBNAME"), user=os.getenv("DBUSERNAME"),
+    password=os.getenv("DBPASSWORD"), port=os.getenv("DBPORT"))
+    # создание интерфейса для sql запроса
+    cursor = connection.cursor()
+    zapros = "SELECT * FROM ПППЛАТКИ ORDER BY id ASC ;"
+    cursor.execute(zapros)
+    vedomost=[]
+    while True:
+        next_row = cursor.fetchone()
+        if next_row:
+            platok_disp=Platok_Schema(id=next_row[0], Название_Платка = next_row[1], Автор_Платка= next_row[2],
+            Колорит_1= next_row[3], Колорит_2= next_row[4], Колорит_3 = next_row[5], Колорит_4= next_row[6],
+            Колорит_5= next_row[7], Узор_Темени= next_row[8], Узор_Сердцевины= next_row[9], Узор_Сторон= next_row[10],
+            Узор_Углов= next_row[11], Узор_Края= next_row[12], Цветы_Орнамент=next_row[13],
+            Изображённый_Цветок_1=next_row[14], Изображённый_Цветок_2=next_row[15], Изображённый_Цветок_3=next_row[16],
+            Изображённый_Цветок_4=next_row[17], Изображённый_Цветок_5=next_row[18], Размер_Платка=next_row[19],
+            Материал_Платка=next_row[20], Материал_Бахромы=next_row[21])
+            vedomost.append(platok_disp)
+        else:
+            cursor.close()
+            connection.close()
+            return components.Page(components=
+                            [components.Heading(text="Вот здесь платоки",level=3),
+                             components.Table(data=vedomost),])
+#@gamajun.get("/api/", response_model=FastUI,response_model_exclude_none=True)
+#def create_urok_graph_inter():
+#return components.Page(components=
+#[components.Heading(text="Добавить урок",level=2),
+#components.ModelForm(model=Urok_Schema,submit_url="/add/")])
+#@gamajun.get("/api/project", response_model=FastUI,response_model_exclude_none=True)
+#def create_urok_graph_inter():
+#return components.Page(components=
+#[components.Heading(text="Добавить проект",level=2),
+#components.ModelForm(model=Project_Schema,submit_url="/add/project")])
+#переадрессация для включения фронта
+@gamajun.get('/{path:path}')
+def gamajun_root() -> HTMLResponse:
+    return HTMLResponse(prebuilt_html(title='FastUI Demo',api_root_url='/gamajun/api',api_path_strip='/gamajun'))
+@gamajun.post('/{path:path}')
+def gamajun_root2() -> HTMLResponse:
+    return HTMLResponse(prebuilt_html(title='FastUI Demo',api_root_url='/gamajun/api',api_path_strip='/gamajun'))
+from fastapi.middleware.cors import CORSMiddleware
+gamajun.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 def kostily_BD():
     # создать ДБ
     import psycopg2 as ps

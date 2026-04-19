@@ -16,6 +16,8 @@ load_dotenv(find_dotenv())
 from faststream.rabbit.fastapi import RabbitBroker, RabbitRouter
 router=RabbitRouter(url=os.getenv("CLOUDAMQP_URL"))
 app = FastAPI()
+from fastapi import BackgroundTasks
+from fastapi import Form, UploadFile
 #работа с базой данных
 from sqlalchemy import  DateTime, String, Float, Column, Integer, func,Text
 from sqlalchemy import  select
@@ -23,7 +25,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from psycopg2.errors import *
 engine = create_async_engine(os.getenv("DBURL"),echo=True,max_overflow=5,pool_size=5)
-session_factory = async_sessionmaker(bind=engine,class_=AsyncSession,expire_on_commit=False)
+session_factory = async_sessionmaker(bind=engine,class_=AsyncSession,expire_on_commit=False,autoflush=True)
 class Base(DeclarativeBase):
     pass
 class Platoky(Base):
@@ -649,12 +651,46 @@ app.mount("/gamajun",gamajun)
             #raise HTTPException(status_code=500, detail="Проблема с брокером")
 #except:
         #raise HTTPException(status_code=500, detail="Проблема с базой данных")
-#@app.post("/add/")
-#async def insert_DB_urok_s_GrIntr(background_task: BackgroundTasks,Имя_Преподавателя: str = Form(),Фамилия_Преподавателя: str = Form(),
-    #Предмет_Обучения: str = Form(),Имя_Ученика: str= Form(),Фамилия_Ученика: str= Form(),Ступень_Обучения: str= Form(),
-    #Дата_Проведения: str= Form(),Время_Начала: str= Form(),Длительность_Занятия_Мин: int= Form(),
-    #Стоимость_Занятия_Центов: int= Form(), Что_Делали_На_Уроке: str= Form(),
-    #Задание_На_Дом: str= Form(), Примечание: str= Form()):
+@app.post("/add/")
+async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = Form(),Название_Платка: str = Form(),
+    Автор_Платка: str = Form(),Колорит_1: str = Form(), Колорит_2: str = Form(), Колорит_3: str= Form(),
+    Колорит_4: str=Form(),Колорит_5: str=Form(),Узор_Темени: str=Form(),Узор_Сердцевины: str=Form(),
+    Узор_Сторон: str=Form(),Узор_Углов:str=Form(),Узор_Края:str=Form(),Цветы_Орнамент:str=Form(),
+    Изображённый_Цветок_1:str=Form(),Изображённый_Цветок_2:str=Form(),Изображённый_Цветок_3: str=Form(),
+    Изображённый_Цветок_4: str=Form(),Изображённый_Цветок_5: str=Form(), Размер_Платка: str=Form(),
+    Материал_Платка:str=Form(),Материал_Бахромы:str=Form()):
+    platok_predstav = ["id: ", "Название платка: ", "Автор платка: ", "Вариант окраски 1: ",
+                       "Вариант окраски 2: ", "Вариант окраски 3 ", "Вариант окраски 4: ", "Вариант окраски 5: ",
+                       "Узор темени: ", "Узор сердцевины: ", "Узор сторон: ", "Узор углов: ", "Узор края: ",
+                       "Соотношение цветов и узора: ", "Нарисованный цветок 1: ", "Нарисованный цветок 2: ",
+                       "Нарисованный цветок 3: ", "Нарисованный цветок 4: ", "Нарисованный цветок 5: ",
+                       "Размер платка: ", "Материал платка: ", "Материал бахромы: "]
+    try:
+        session = session_factory()
+        platoch_eksemp = Platoky(id=id,Название=Название_Платка,Автор=Автор_Платка, Колорит_1=Колорит_1,
+        Колорит_2=Колорит_2, Колорит_3=Колорит_3,Колорит_4=Колорит_4, Колорит_5=Колорит_5,Узор_темени=Узор_Темени,
+        Узор_сердцевины=Узор_Сердцевины,Узор_сторон=Узор_Сторон, Узор_углов=Узор_Углов,Узор_края=Узор_Края,
+        Цветы_Орнамент=Цветы_Орнамент,Изображенный_Цветок_1=Изображённый_Цветок_1,
+        Изображенный_Цветок_2=Изображённый_Цветок_2,Изображенный_Цветок_3=Изображённый_Цветок_3,
+        Изображенный_Цветок_4=Изображённый_Цветок_4,Изображенный_Цветок_5=Изображённый_Цветок_5,
+        Размер_Платка=Размер_Платка, Материал_Платка=Материал_Платка,
+        Материал_Бахромы=Материал_Бахромы)
+        session.add(platoch_eksemp)
+        #await session.commit()
+        await session.close()
+        return components.FireEvent(event=GoToEvent(url="/gamajun/results"))
+    except:
+        raise HTTPException(status_code=500, detail="Проблема с БД при вставке данных")
+        #try:
+            #platok_dannye = []
+            #for j in range(len(dataframe.columns)):
+                #platok_rjad = platok_predstav[j] + " " + str(dataframe.iloc[i,j])
+                #platok_dannye.append(platok_rjad)
+            #await router.broker.publish(message="Добавлен новый платок", queue="PLATOKY")
+            #await router.broker.publish(message=f"{platok_dannye}", queue="PLATOKY")
+            #platok_vstavka.append(platok_dannye)
+            #except: raise HTTPException(status_code=500, detail="Проблема с брокером")
+    #return platok_vstavka, bityje_rjady
     #peremycka1 = " -> "
     #peremycka2 = "; "
     #soobshenije1 = "Имя_Преподавателя"
@@ -734,11 +770,11 @@ async def show_platoky():
             return components.Page(components=
                             [components.Heading(text="Вот здесь платоки",level=3),
                              components.Table(data=vedomost),])
-#@gamajun.get("/api/", response_model=FastUI,response_model_exclude_none=True)
-#def create_urok_graph_inter():
-#return components.Page(components=
-#[components.Heading(text="Добавить урок",level=2),
-#components.ModelForm(model=Urok_Schema,submit_url="/add/")])
+@gamajun.get("/api/create", response_model=FastUI,response_model_exclude_none=True)
+async def create_platk_graph_interf():
+    return components.Page(components=
+    [components.Heading(text="Добавить платок",level=2),
+    components.ModelForm(model=Platok_Schema,submit_url="/add")])
 #@gamajun.get("/api/project", response_model=FastUI,response_model_exclude_none=True)
 #def create_urok_graph_inter():
 #return components.Page(components=

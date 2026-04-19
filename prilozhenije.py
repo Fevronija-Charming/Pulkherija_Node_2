@@ -14,6 +14,7 @@ from tokenize import String
 load_dotenv(find_dotenv())
 #заяц включен
 from faststream.rabbit.fastapi import RabbitBroker, RabbitRouter
+broker = RabbitBroker(url=os.getenv("CLOUDAMQP_URL"))
 router=RabbitRouter(url=os.getenv("CLOUDAMQP_URL"))
 app = FastAPI()
 from fastapi import BackgroundTasks
@@ -651,7 +652,7 @@ app.mount("/gamajun",gamajun)
             #raise HTTPException(status_code=500, detail="Проблема с брокером")
 #except:
         #raise HTTPException(status_code=500, detail="Проблема с базой данных")
-@app.post("/add/")
+@app.post("/add/",response_model=FastUI,response_model_exclude_none=True)
 async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = Form(),Название_Платка: str = Form(),
     Автор_Платка: str = Form(),Колорит_1: str = Form(), Колорит_2: str = Form(), Колорит_3: str= Form(),
     Колорит_4: str=Form(),Колорит_5: str=Form(),Узор_Темени: str=Form(),Узор_Сердцевины: str=Form(),
@@ -659,12 +660,17 @@ async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = F
     Изображённый_Цветок_1:str=Form(),Изображённый_Цветок_2:str=Form(),Изображённый_Цветок_3: str=Form(),
     Изображённый_Цветок_4: str=Form(),Изображённый_Цветок_5: str=Form(), Размер_Платка: str=Form(),
     Материал_Платка:str=Form(),Материал_Бахромы:str=Form()):
-    platok_predstav = ["id: ", "Название платка: ", "Автор платка: ", "Вариант окраски 1: ",
-                       "Вариант окраски 2: ", "Вариант окраски 3 ", "Вариант окраски 4: ", "Вариант окраски 5: ",
-                       "Узор темени: ", "Узор сердцевины: ", "Узор сторон: ", "Узор углов: ", "Узор края: ",
-                       "Соотношение цветов и узора: ", "Нарисованный цветок 1: ", "Нарисованный цветок 2: ",
-                       "Нарисованный цветок 3: ", "Нарисованный цветок 4: ", "Нарисованный цветок 5: ",
-                       "Размер платка: ", "Материал платка: ", "Материал бахромы: "]
+    platok_predstav = [id,Название_Платка,Автор_Платка,Колорит_1,Колорит_2, Колорит_3,Колорит_4,Колорит_5,Узор_Темени,
+    Узор_Сердцевины,Узор_Сторон,Узор_Углов,Узор_Края, Цветы_Орнамент,Изображённый_Цветок_1,Изображённый_Цветок_2,
+    Изображённый_Цветок_3, Изображённый_Цветок_4,Изображённый_Цветок_5,Размер_Платка,Материал_Платка,Материал_Бахромы]
+    platok_label = ["id: ", "Название платка: ", "Автор платка: ", "Вариант окраски 1: ",
+    "Вариант окраски 2: ", "Вариант окраски 3 ", "Вариант окраски 4: ", "Вариант окраски 5: ","Узор темени: ",
+    "Узор сердцевины: ", "Узор сторон: ", "Узор углов: ", "Узор края: ","Соотношение цветов и узора: ",
+    "Нарисованный цветок 1: ", "Нарисованный цветок 2: ","Нарисованный цветок 3: ", "Нарисованный цветок 4: ",
+    "Нарисованный цветок 5: ","Размер платка: ", "Материал платка: ", "Материал бахромы: "]
+    soobshenije = ""
+    for i in range(len(platok_predstav)):
+        soobshenije = soobshenije + platok_label[i] + " -> " + platok_predstav[i] + "; "
     try:
         session = session_factory()
         platoch_eksemp = Platoky(id=id,Название=Название_Платка,Автор=Автор_Платка, Колорит_1=Колорит_1,
@@ -678,7 +684,12 @@ async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = F
         session.add(platoch_eksemp)
         #await session.commit()
         await session.close()
-        return components.FireEvent(event=GoToEvent(url="/gamajun/results"))
+        try:
+            async with broker:
+                await broker.publish(message=f"{soobshenije}", queue="PLATOKY")
+                return components.FireEvent(event=GoToEvent(url="/gamajun/results"))
+        except:
+            raise HTTPException(status_code=500, detail="Проблема с брокером")
     except:
         raise HTTPException(status_code=500, detail="Проблема с БД при вставке данных")
         #try:

@@ -652,7 +652,7 @@ app.mount("/gamajun",gamajun)
             #raise HTTPException(status_code=500, detail="Проблема с брокером")
 #except:
         #raise HTTPException(status_code=500, detail="Проблема с базой данных")
-@app.post("/add/",response_model=FastUI,response_model_exclude_none=True)
+@gamajun.post("/api/add",response_model=FastUI,response_model_exclude_none=True)
 async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = Form(),Название_Платка: str = Form(),
     Автор_Платка: str = Form(),Колорит_1: str = Form(), Колорит_2: str = Form(), Колорит_3: str= Form(),
     Колорит_4: str=Form(),Колорит_5: str=Form(),Узор_Темени: str=Form(),Узор_Сердцевины: str=Form(),
@@ -660,7 +660,7 @@ async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = F
     Изображённый_Цветок_1:str=Form(),Изображённый_Цветок_2:str=Form(),Изображённый_Цветок_3: str=Form(),
     Изображённый_Цветок_4: str=Form(),Изображённый_Цветок_5: str=Form(), Размер_Платка: str=Form(),
     Материал_Платка:str=Form(),Материал_Бахромы:str=Form()):
-    platok_predstav = [id,Название_Платка,Автор_Платка,Колорит_1,Колорит_2, Колорит_3,Колорит_4,Колорит_5,Узор_Темени,
+    platok_predstav = [str(id),Название_Платка,Автор_Платка,Колорит_1,Колорит_2, Колорит_3,Колорит_4,Колорит_5,Узор_Темени,
     Узор_Сердцевины,Узор_Сторон,Узор_Углов,Узор_Края, Цветы_Орнамент,Изображённый_Цветок_1,Изображённый_Цветок_2,
     Изображённый_Цветок_3, Изображённый_Цветок_4,Изображённый_Цветок_5,Размер_Платка,Материал_Платка,Материал_Бахромы]
     platok_label = ["id: ", "Название платка: ", "Автор платка: ", "Вариант окраски 1: ",
@@ -671,6 +671,7 @@ async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = F
     soobshenije = ""
     for i in range(len(platok_predstav)):
         soobshenije = soobshenije + platok_label[i] + " -> " + platok_predstav[i] + "; "
+    #background_task.add_task(vstavkaplatka(soobshenije))
     try:
         session = session_factory()
         platoch_eksemp = Platoky(id=id,Название=Название_Платка,Автор=Автор_Платка, Колорит_1=Колорит_1,
@@ -682,7 +683,7 @@ async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = F
         Размер_Платка=Размер_Платка, Материал_Платка=Материал_Платка,
         Материал_Бахромы=Материал_Бахромы)
         session.add(platoch_eksemp)
-        #await session.commit()
+        await session.commit()
         await session.close()
         try:
             async with broker:
@@ -781,11 +782,11 @@ async def show_platoky():
             return components.Page(components=
                             [components.Heading(text="Вот здесь платоки",level=3),
                              components.Table(data=vedomost),])
-@gamajun.get("/api/create", response_model=FastUI,response_model_exclude_none=True)
+@gamajun.get("/api/create/", response_model=FastUI,response_model_exclude_none=True)
 async def create_platk_graph_interf():
     return components.Page(components=
     [components.Heading(text="Добавить платок",level=2),
-    components.ModelForm(model=Platok_Schema,submit_url="/add")])
+    components.ModelForm(model=Platok_Schema,submit_url="/gamajun/api/add")])
 #@gamajun.get("/api/project", response_model=FastUI,response_model_exclude_none=True)
 #def create_urok_graph_inter():
 #return components.Page(components=
@@ -826,8 +827,12 @@ def kostily_BD():
             connection.close()
         if cursor:
             cursor.close()
+async def create_tables():
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
 async def main():
     init(autoreset=True)
+    await create_tables()
     uvicorn.run("prilozhenije:app", reload=True, port=8000)
 #ЗАЯЦ ВКЛЮЧЕН
 app.include_router(router)

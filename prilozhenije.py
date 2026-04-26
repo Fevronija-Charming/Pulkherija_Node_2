@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import field
 from io import BytesIO
 import pandas as pd
 from colorama import *
@@ -7,6 +8,8 @@ from fastapi import HTTPException
 from fastapi import Depends
 from typing import Annotated
 import uvicorn
+from openpyxl.styles.builtins import title
+from openpyxl.worksheet.table import TableColumn
 from pydantic import BaseModel, Field, ValidationError
 from dotenv import find_dotenv, load_dotenv
 import os
@@ -17,7 +20,51 @@ from faststream.rabbit.fastapi import RabbitBroker, RabbitRouter
 broker = RabbitBroker(url=os.getenv("CLOUDAMQP_URL"))
 router=RabbitRouter(url=os.getenv("CLOUDAMQP_URL"))
 app = FastAPI()
+#перенос тяжелой задачи в фон
 from fastapi import BackgroundTasks
+async def vstavka_platka(soobshenije,platok_predstav):
+    session = session_factory()
+    query = select(Platoky).where(Platoky.Название==platok_predstav[1])
+    result = await session.execute(query)
+    unikalnost_platka = result.scalar_one_or_none()
+    if unikalnost_platka is None:
+        session = session_factory()
+        query2 = select(Platoky).where(Platoky.id==int(platok_predstav[0]))
+        result2 = await session.execute(query2)
+        unikalnost_id = result2.scalar_one_or_none()
+        if unikalnost_id is None:
+            try:
+                platoch_eksemp = Platoky(id=int(platok_predstav[0]), Название=platok_predstav[1],
+                Автор=platok_predstav[2], Колорит_1=platok_predstav[3],Колорит_2=platok_predstav[4],
+                Колорит_3=platok_predstav[5],Колорит_4=platok_predstav[6], Колорит_5=platok_predstav[7],
+                Узор_темени=platok_predstav[8],Узор_сердцевины=platok_predstav[9], Узор_сторон=platok_predstav[10],
+                Узор_углов=platok_predstav[11],Узор_края=platok_predstav[12], Цветы_Орнамент=platok_predstav[13],
+                Изображенный_Цветок_1=platok_predstav[14],Изображенный_Цветок_2=platok_predstav[15],
+                Изображенный_Цветок_3=platok_predstav[16],Изображенный_Цветок_4=platok_predstav[17],
+                Изображенный_Цветок_5=platok_predstav[18],Размер_Платка=platok_predstav[19],
+                Материал_Платка=platok_predstav[20],Материал_Бахромы=platok_predstav[21])
+                session = session_factory()
+                session.add(platoch_eksemp)
+                await session.commit()
+                await session.close()
+                try:
+                    await router.broker.publish(message="Добавлен новый платок", queue="PLATOKY")
+                    await router.broker.publish(message=f"{soobshenije}", queue="PLATOKY")
+                    return soobshenije, components.FireEvent(event=GoToEvent(url="/gamajun/results"))
+                except:
+                    raise HTTPException(status_code=500, detail="Проблема с брокером")
+            except:
+                raise HTTPException(status_code=500, detail="Проблема с базой данных")
+        else:
+            async with broker:
+                await broker.publish(message="Ошибка при вставке платка", queue="PLATOKY")
+                await broker.publish(message="Артикул платка занят", queue="PLATOKY")
+                return None
+    else:
+        async with broker:
+            await broker.publish(message="Ошибка при вставке платка", queue="PLATOKY")
+            await broker.publish(message="Такой платок уже есть", queue="PLATOKY")
+            return None
 from fastapi import Form, UploadFile
 #работа с базой данных
 from sqlalchemy import  DateTime, String, Float, Column, Integer, func,Text
@@ -645,13 +692,38 @@ app.mount("/gamajun",gamajun)
             #try:
                 #recipient = os.getenv("RECIPIENT1")
                 #background_task.add_task(send_email_async, "Добавлен новый проект", recipient, soobshenije)
-                #return soobshenije
+                #return soobshenije`
 #except:
                 #raise HTTPException(status_code=500, detail="Проблема с почтой")
 #except:
             #raise HTTPException(status_code=500, detail="Проблема с брокером")
 #except:
         #raise HTTPException(status_code=500, detail="Проблема с базой данных")
+class TablaSymboly(BaseModel):
+    Название_Символа: str = Field(min_length=3, max_length=32)
+    Значение_Символа: str = Field(min_length=5, max_length=1000)
+    Символ_На_Платке: str = Field(min_length=5, max_length=85)
+from fastapi.staticfiles import StaticFiles
+gamajun.mount("/static",StaticFiles(directory="static"))
+from templates import nazv_symbolov,opis_symboli
+data_symboli=[
+    TablaSymboly(Название_Символа=nazv_symbolov[0],Значение_Символа=opis_symboli[0], Символ_На_Платке="![Прямой_крест](static/prjamoykrest13.jpg)"),
+    TablaSymboly(Название_Символа=nazv_symbolov[1],Значение_Символа=opis_symboli[1], Символ_На_Платке="![Косой_крест](static/prjamoykrest12.jpg)"),
+    TablaSymboly(Название_Символа=nazv_symbolov[2],Значение_Символа=opis_symboli[2], Символ_На_Платке="![Квадрат](static/prjamoykrest16.jpg)"),
+    TablaSymboly(Название_Символа=nazv_symbolov[3],Значение_Символа=opis_symboli[3], Символ_На_Платке="![Ромб](static/prjamoykrest17.jpg)"),
+    TablaSymboly(Название_Символа=nazv_symbolov[4],Значение_Символа=opis_symboli[4], Символ_На_Платке="![Восьмиугольник](static/prjamoykrest18.jpg)"),
+    TablaSymboly(Название_Символа=nazv_symbolov[5],Значение_Символа=opis_symboli[5], Символ_На_Платке="![Круг](static/prjamoykrest19.jpg)"),
+    TablaSymboly(Название_Символа=nazv_symbolov[6],Значение_Символа=opis_symboli[6], Символ_На_Платке="![Алатырь](static/prjamoykrest20.jpg)")
+]
+@gamajun.get("/api/symboli",response_model=FastUI,response_model_exclude_none=True)
+async def otris_symboli():
+    return components.Page(components=
+                            [components.Heading(text="Значение символов на платке",level=3),
+                             components.Table(data=data_symboli,columns=[DisplayLookup(field="Название_Символа",title="Название_Символа"),
+                                                                         DisplayLookup(field="Значение_Символа",title="Значение_Символа"),
+                                                                        DisplayLookup(field="Символ_На_Платке",title="Символ_На_Платке",mode=DisplayMode.markdown)
+                                                                         ]),])
+
 @gamajun.post("/api/add",response_model=FastUI,response_model_exclude_none=True)
 async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = Form(),Название_Платка: str = Form(),
     Автор_Платка: str = Form(),Колорит_1: str = Form(), Колорит_2: str = Form(), Колорит_3: str= Form(),
@@ -671,7 +743,8 @@ async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = F
     soobshenije = ""
     for i in range(len(platok_predstav)):
         soobshenije = soobshenije + platok_label[i] + " -> " + platok_predstav[i] + "; "
-    #background_task.add_task(vstavkaplatka(soobshenije))
+    #вывод тяжёлой задачи в фон
+    #background_task.add_task(vstavka_platka,soobshenije,platok_predstav)
     try:
         session = session_factory()
         platoch_eksemp = Platoky(id=id,Название=Название_Платка,Автор=Автор_Платка, Колорит_1=Колорит_1,

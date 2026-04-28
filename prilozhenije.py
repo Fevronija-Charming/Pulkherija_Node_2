@@ -699,10 +699,18 @@ app.mount("/gamajun",gamajun)
             #raise HTTPException(status_code=500, detail="Проблема с брокером")
 #except:
         #raise HTTPException(status_code=500, detail="Проблема с базой данных")
+########################################################################################################################
+#Отрисовка уроков по платкам
+########################################################################################################################
 class TablaSymboly(BaseModel):
     Название_Символа: str = Field(min_length=3, max_length=32)
     Значение_Символа: str = Field(min_length=5, max_length=1000)
     Символ_На_Платке: str = Field(min_length=5, max_length=85)
+class TablaColority(BaseModel):
+    Cтолбец_Колорита_1: str = Field(min_length=3, max_length=128)
+    Cтолбец_Колорита_2: str = Field(min_length=3, max_length=128)
+    Cтолбец_Колорита_3: str = Field(min_length=3, max_length=128)
+    Cтолбец_Колорита_4: str = Field(min_length=3, max_length=128)
 from fastapi.staticfiles import StaticFiles
 gamajun.mount("/static",StaticFiles(directory="static"))
 from templates import nazv_symbolov,opis_symboli
@@ -715,6 +723,20 @@ data_symboli=[
     TablaSymboly(Название_Символа=nazv_symbolov[5],Значение_Символа=opis_symboli[5], Символ_На_Платке="![Круг](static/prjamoykrest19.jpg)"),
     TablaSymboly(Название_Символа=nazv_symbolov[6],Значение_Символа=opis_symboli[6], Символ_На_Платке="![Алатырь](static/prjamoykrest20.jpg)")
 ]
+data_koloryty=[
+TablaColority(Cтолбец_Колорита_1="Лунный!""[Прямой_крест](static/luna.jpg)",
+                Cтолбец_Колорита_2="Зелёный!""[Прямой_крест](static/zeleny.jpg)",
+                Cтолбец_Колорита_3="Жёлтый+Оранжевый!""[Прямой_крест](static/zholt.jpg)",
+                Cтолбец_Колорита_4="Лимонный!""[Прямой_крест](static/kremy.jpg"),
+TablaColority(Cтолбец_Колорита_1="Черный!""[Прямой_крест](static/prjamoykrest20.jpg)",
+                Cтолбец_Колорита_2="Синий!""[Прямой_крест](static/tayna.jpg)",
+                Cтолбец_Колорита_3="Красный!""[Прямой_крест](static/kraski.jpg)",
+                Cтолбец_Колорита_4="Белый!""[Прямой_крест](static/bely.jpg)"),
+TablaColority(Cтолбец_Колорита_1="Серый!""[Прямой_крест](static/serost.jpg)",
+                Cтолбец_Колорита_2="Фиолетоый""![Прямой_крест](static/krem.jpg)",
+                Cтолбец_Колорита_3="Бордовый""![Прямой_крест](static/kremy.jpg)",
+                Cтолбец_Колорита_4="Розовый!""[Прямой_крест](static/korich.jpg)"),
+]
 @gamajun.get("/api/symboli",response_model=FastUI,response_model_exclude_none=True)
 async def otris_symboli():
     return components.Page(components=
@@ -723,7 +745,15 @@ async def otris_symboli():
                                                                          DisplayLookup(field="Значение_Символа",title="Значение_Символа"),
                                                                         DisplayLookup(field="Символ_На_Платке",title="Символ_На_Платке",mode=DisplayMode.markdown)
                                                                          ]),])
-
+@gamajun.get("/api/kolority",response_model=FastUI,response_model_exclude_none=True)
+async def otris_kolority():
+    return components.Page(components=
+                            [components.Heading(text="Таблица колоритов платков",level=3),
+                             components.Table(data=data_koloryty,columns=[DisplayLookup(field="Cтолбец_Колорита_1",title="",mode=DisplayMode.markdown),
+                                                                        DisplayLookup(field="Cтолбец_Колорита_2",title="",mode=DisplayMode.markdown),
+                                                                        DisplayLookup(field="Cтолбец_Колорита_3",title="",mode=DisplayMode.markdown),
+                                                                        DisplayLookup(field="Cтолбец_Колорита_4",title="",mode=DisplayMode.markdown),
+                                                                         ]),])
 @gamajun.post("/api/add",response_model=FastUI,response_model_exclude_none=True)
 async def insert_DB_platok_s_GrIntr(background_task: BackgroundTasks,id: int = Form(),Название_Платка: str = Form(),
     Автор_Платка: str = Form(),Колорит_1: str = Form(), Колорит_2: str = Form(), Колорит_3: str= Form(),
